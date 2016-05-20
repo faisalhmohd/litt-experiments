@@ -1,0 +1,101 @@
+<html>
+	<head>
+		<title>My first Three.js app</title>
+		<style>
+		@import url(https://fonts.googleapis.com/css?family=Open+Sans:800);
+			body { margin: 0;
+				background: url(images/bg.jpg);
+				background-repeat: no-repeat;
+   				background-size: cover;
+			 }
+			canvas { width: 100%; height: 100% }
+			.content {
+				position: absolute;
+    			color: white;
+    			top: 40%;
+    			right: 6%;
+			}
+			.logo {
+				font-family: 'Open Sans', sans-serif;
+				font-size: 10vmin;
+    			margin: 0;
+			}
+			.caption {
+				font-family: 'Open Sans', sans-serif;
+				font-size: 4vmin;
+    			margin: 0;
+			}
+
+		</style>
+	</head>
+	<body>
+		<div class="content">
+			<h1 class="logo">litt</h1>
+			<h2 class="caption">Some caption about the Little Space!</h2>
+		</div>
+		<script src="js/three.min.js"></script>
+		<script>
+			var scene = new THREE.Scene();
+			var camera = new THREE.PerspectiveCamera( 40, window.innerWidth / window.innerHeight, 1, 15000 );
+			camera.position.z = 4250;
+
+			var renderer = new THREE.WebGLRenderer({ antialias: false,alpha:true });
+			renderer.setSize( window.innerWidth, window.innerHeight );
+			renderer.setClearColor(0x000000, 0);
+			document.body.appendChild( renderer.domElement );
+
+			// Fog
+			// scene.fog = new THREE.Fog( 0xffffff, 260, 1500 );
+			// scene.fog.color.setHSL( 0, 0, 100 );
+
+			// Sun
+			var bulbGeometry = new THREE.SphereGeometry( 250, 250, 250 );
+			bulbLight = new THREE.PointLight( 0xffee88, 1, 2500, 0.5 );
+			bulbMat = new THREE.MeshStandardMaterial( {
+				emissive: 0xeeeeee,
+				emissiveIntensity: 1,
+				color: 0x000000
+			});
+			bulbLight.add( new THREE.Mesh( bulbGeometry, bulbMat ) );
+			bulbLight.position.set( -500, 2, 1500 );
+			bulbLight.castShadow = true;
+			scene.add( bulbLight );
+
+			// world
+			var material = new THREE.MeshPhongMaterial({ 
+				color: 0x42A6FD,
+				// specular: 0x549CDB, 
+				shininess: 100 
+			});
+			for ( var i = 0; i < 15; i ++ ) {
+				var s = Math.floor((Math.random() * 50) + 25);
+				var cube = new THREE.DodecahedronGeometry(s);
+				var mesh = new THREE.Mesh( cube, material );
+				mesh.position.x = 2000 * ( 2.0 * Math.random() - 1.0 );
+				mesh.position.y = Math.floor((Math.random() * -150) + -050);
+				// console.log(mesh.position.y);
+				mesh.position.z = 1500 * ( 2.0 * Math.random() - 1.0 );
+				mesh.rotation.x = Math.random() * Math.PI;
+				mesh.rotation.y = Math.random() * Math.PI;
+				mesh.rotation.z = Math.random() * Math.PI;
+				mesh.matrixAutoUpdate = false;
+				mesh.updateMatrix();
+				scene.add( mesh );
+				bulbLight.add(mesh);
+			}
+
+
+			var render = function () {
+				requestAnimationFrame( render );
+
+				// cube.rotation.x += 0.1;
+				// cube.rotation.y += 0.1;
+				bulbLight.rotation.y += 0.001;	
+				// camera.rotation.y += 0.01;
+				renderer.render(scene, camera);
+			};
+
+			render();
+		</script>
+	</body>
+</html>
