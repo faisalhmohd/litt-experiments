@@ -1,10 +1,10 @@
 <html>
 	<head>
-		<title>My first Three.js app</title>
+		<title>litt - Little Space</title>
 		<style>
 		@import url(https://fonts.googleapis.com/css?family=Open+Sans:800);
 			body { margin: 0;
-				background: url(images/bg.jpg);
+				background: url(http://www.pixelstalk.net/wp-content/uploads/2016/04/Stars-wallpaper-HD-desktop.jpg);
 				background-repeat: no-repeat;
    				background-size: cover;
 			 }
@@ -62,12 +62,14 @@
 			scene.add( bulbLight );
 
 			// world
-			var material = new THREE.MeshPhongMaterial({ 
+			var material = new THREE.MeshPhongMaterial({
 				color: 0x42A6FD,
-				// specular: 0x549CDB, 
-				shininess: 100 
+				// specular: 0x549CDB,
+				shininess: 100
 			});
-			for ( var i = 0; i < 15; i ++ ) {
+
+
+			for ( var i = 0; i < 25; i ++ ) {
 				var s = Math.floor((Math.random() * 50) + 25);
 				var cube = new THREE.DodecahedronGeometry(s);
 				var mesh = new THREE.Mesh( cube, material );
@@ -90,7 +92,7 @@
 
 				// cube.rotation.x += 0.1;
 				// cube.rotation.y += 0.1;
-				bulbLight.rotation.y += 0.001;	
+				bulbLight.rotation.y += 0.001;
 				// camera.rotation.y += 0.01;
 				renderer.render(scene, camera);
 			};
