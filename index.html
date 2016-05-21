@@ -1,94 +1,253 @@
-<html>
-	<head>
-		<title>litt - Little Space</title>
-		<style>
-		@import url(https://fonts.googleapis.com/css?family=Open+Sans:800);
-			body { margin: 0;
-				background: url(http://www.pixelstalk.net/wp-content/uploads/2016/04/Stars-wallpaper-HD-desktop.jpg);
-				background-repeat: no-repeat;
-   				background-size: cover;
-			 }
-			canvas { width: 100%; height: 100% }
-			.content {
-				position: absolute;
-    			color: white;
-    			top: 40%;
-    			right: 6%;
-			}
-			.logo {
-				font-family: 'Open Sans', sans-serif;
-				font-size: 10vmin;
-    			margin: 0;
-			}
-			.caption {
-				font-family: 'Open Sans', sans-serif;
-				font-size: 4vmin;
-    			margin: 0;
-			}
+<!DOCTYPE html>
+<html lang="en">
 
-		</style>
-	</head>
-	<body>
-		<div class="content">
-			<h1 class="logo">litt</h1>
-			<h2 class="caption">Some caption about the Little Space!</h2>
-		</div>
-		<script src="https://ajax.googleapis.com/ajax/libs/threejs/r76/three.min.js"></script>
-		<script>
-			var scene = new THREE.Scene();
-			var camera = new THREE.PerspectiveCamera( 40, window.innerWidth / window.innerHeight, 1, 15000 );
-			camera.position.z = 4250;
+<head>
+    <title>litt</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <style>
+        @import url(https://fonts.googleapis.com/css?family=Open+Sans:800);
+        body {
+            overflow: hidden;
+            margin: 0;
+        }
 
-			var renderer = new THREE.WebGLRenderer({ antialias: false,alpha:true });
-			renderer.setSize( window.innerWidth, window.innerHeight );
-			renderer.setClearColor(0x000000, 0);
-			document.body.appendChild( renderer.domElement );
+        canvas {
+            width: 100%;
+            height: 100%
+        }
 
-			// Sun
-			var bulbGeometry = new THREE.SphereGeometry( 250, 250, 250 );
-			bulbLight = new THREE.PointLight( 0xffee88, 1, 2500, 0.5 );
-			bulbMat = new THREE.MeshStandardMaterial( {
-				emissive: 0xeeeeee,
-				emissiveIntensity: 1,
-				color: 0x000000
-			});
-			bulbLight.add( new THREE.Mesh( bulbGeometry, bulbMat ) );
-			bulbLight.position.set( -500, 2, 1500 );
-			bulbLight.castShadow = true;
-			scene.add( bulbLight );
+        .content {
+            position: absolute;
+            color: white;
+            top: 40%;
+            right: 6%;
+        }
 
-			// world
+        .logo {
+            font-family: 'Open Sans', sans-serif;
+            font-size: 10vmin;
+            margin: 0;
+            color: #F1FFF5;
+            opacity: 0.8;
+        }
 
-			var material = new THREE.MeshPhongMaterial({
-				color: 0x42A6FD,
-				shininess: 100
-			});
+        .caption {
+            font-family: 'Open Sans', sans-serif;
+            font-size: 4vmin;
+            margin: 0;
+            color: #F1FFF5;
+            opacity: 0.8;
+        }
+    </style>
+</head>
 
-			for ( var i = 0; i < 25; i ++ ) {
-				var s = Math.floor((Math.random() * 50) + 25);
-				var cube = new THREE.DodecahedronGeometry(s);
-				var mesh = new THREE.Mesh( cube, material );
-				mesh.position.x = 2000 * ( 2.0 * Math.random() - 1.0 );
-				mesh.position.y = Math.floor((Math.random() * -150) + -050);
-				mesh.position.z = 1500 * ( 2.0 * Math.random() - 1.0 );
-				mesh.rotation.x = Math.random() * Math.PI;
-				mesh.rotation.y = Math.random() * Math.PI;
-				mesh.rotation.z = Math.random() * Math.PI;
-				mesh.matrixAutoUpdate = false;
-				mesh.updateMatrix();
-				scene.add( mesh );
-				bulbLight.add(mesh);
-			}
+<body>
+    <div class="content">
+        <h1 class="logo">litt</h1>
+        <h2 class="caption">Some caption about the Little Space!</h2>
+    </div>
+    <div id="container"></div>
+    <script src="https://ajax.googleapis.com/ajax/libs/threejs/r76/three.min.js"></script>
+
+    <script src="js/shaders/ConvolutionShader.js"></script>
+    <script src="js/shaders/CopyShader.js"></script>
+    <script src="js/shaders/FilmShader.js"></script>
+
+    <script src="js/postprocessing/EffectComposer.js"></script>
+    <script src="js/postprocessing/ShaderPass.js"></script>
+    <script src="js/postprocessing/MaskPass.js"></script>
+    <script src="js/postprocessing/RenderPass.js"></script>
+    <script src="js/postprocessing/BloomPass.js"></script>
+    <script src="js/postprocessing/FilmPass.js"></script>
 
 
-			var render = function () {
-				requestAnimationFrame( render );
-				bulbLight.rotation.y += 0.001;
-				renderer.render(scene, camera);
-			};
+    <script id="fragmentShader" type="x-shader/x-fragment">
 
-			render();
-		</script>
-	</body>
-</html>
+        uniform float time; uniform vec2 resolution; uniform float fogDensity; uniform vec3 fogColor; uniform sampler2D texture1; uniform sampler2D texture2; varying vec2 vUv; void main( void ) { vec2 position = -1.0 + 2.0 * vUv; vec4 noise = texture2D( texture1,
+        vUv ); vec2 T1 = vUv + vec2( 1.5, -1.5 ) * time *0.02; vec2 T2 = vUv + vec2( -0.5, 2.0 ) * time * 0.01; T1.x += noise.x * 2.0; T1.y += noise.y * 2.0; T2.x -= noise.y * 0.2; T2.y += noise.z * 0.2; float p = texture2D( texture1, T1 * 2.0 ).a; vec4
+        color = texture2D( texture2, T2 * 2.0 ); vec4 temp = color * ( vec4( p, p, p, p ) * 2.0 ) + ( color * color - 0.1 ); if( temp.r > 1.0 ){ temp.bg += clamp( temp.r - 2.0, 0.0, 100.0 ); } if( temp.g > 1.0 ){ temp.rb += temp.g - 1.0; } if( temp.b
+        > 1.0 ){ temp.rg += temp.b - 1.0; } gl_FragColor = temp; float depth = gl_FragCoord.z / gl_FragCoord.w; const float LOG2 = 1.442695; float fogFactor = exp2( - fogDensity * fogDensity * depth * depth * LOG2 ); fogFactor = 1.0 - clamp( fogFactor,
+        0.0, 1.0 ); gl_FragColor = mix( gl_FragColor, vec4( fogColor, gl_FragColor.w ), fogFactor ); }
+
+    </script>
+
+    <script id="vertexShader" type="x-shader/x-vertex">
+
+        uniform vec2 uvScale; varying vec2 vUv; void main() { vUv = uvScale * uv; vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 ); gl_Position = projectionMatrix * mvPosition; }
+
+    </script>
+
+    <script>
+        var container, stats;
+        var clock = new THREE.Clock();
+        var camera, scene, renderer, composer;
+        var uniforms, material, sun;
+
+        var width = window.innerWidth || 2;
+        var height = window.innerHeight || 2;
+
+        var windowHalfX = width / 2;
+        var windowHalfY = height / 2;
+
+        init();
+        animate();
+
+        function init() {
+
+            container = document.getElementById('container');
+
+            camera = new THREE.PerspectiveCamera(75, windowHalfX / windowHalfY, 1, 3000);
+            camera.position.z = 7;
+            camera.position.x = 2;
+
+            scene = new THREE.Scene();
+
+            var textureLoader = new THREE.TextureLoader();
+
+            uniforms = {
+
+                fogDensity: {
+                    type: "f",
+                    value: 0.45
+                },
+                fogColor: {
+                    type: "v3",
+                    value: new THREE.Vector3(0, 0, 0)
+                },
+                time: {
+                    type: "f",
+                    value: 2.0
+                },
+                resolution: {
+                    type: "v2",
+                    value: new THREE.Vector2()
+                },
+                uvScale: {
+                    type: "v2",
+                    value: new THREE.Vector2(3.0, 2.0)
+                },
+                texture1: {
+                    type: "t",
+                    value: textureLoader.load("textures/lava/cloud.png")
+                },
+                texture2: {
+                    type: "t",
+                    value: textureLoader.load("textures/lava/lavatile.jpg")
+                }
+
+            };
+
+            uniforms.texture1.value.wrapS = uniforms.texture1.value.wrapT = THREE.RepeatWrapping;
+            uniforms.texture2.value.wrapS = uniforms.texture2.value.wrapT = THREE.RepeatWrapping;
+
+            var size = 0.65;
+
+            material = new THREE.ShaderMaterial({
+
+                uniforms: uniforms,
+                vertexShader: document.getElementById('vertexShader').textContent,
+                fragmentShader: document.getElementById('fragmentShader').textContent
+
+            });
+
+            sun = new THREE.Mesh(new THREE.SphereGeometry(2, 26, 26), material);
+            sun.rotation.y = 0.3;
+            sun.position.set(0, 0, 0);
+            scene.add(sun);
+
+            // Sun
+            var bulbGeometry = new THREE.SphereGeometry(1, 1, 1);
+            bulbLight = new THREE.PointLight(0xffffff, 0.4, 10, 3);
+            bulbMat = new THREE.MeshStandardMaterial({
+                emissive: 0xffffff,
+                emissiveIntensity: 0.1,
+                color: 0x000000
+            });
+            bulbLight.add(new THREE.Mesh(bulbGeometry, bulbMat));
+            bulbLight.position.set(-0.1, 0, 0.5);
+            bulbLight.castShadow = true;
+            scene.add(bulbLight);
+
+            // world
+
+            var material = new THREE.MeshPhongMaterial({
+                color: 0xffffff,
+                shininess: 100,
+                map: textureLoader.load('textures/landmap.jpg'),
+                bumpMap: textureLoader.load('textures/landtexture.jpg')
+            });
+
+            for (var i = 0; i < 20; i++) {
+                var s = 0.25;
+                var cube = new THREE.DodecahedronGeometry(s);
+                var mesh = new THREE.Mesh(cube, material);
+                mesh.position.x = 7 * (2.0 * Math.random() - 1.0);
+                mesh.position.y = 1 * (2.0 * Math.random() - 1.0);
+                mesh.position.z = 7 * (2.0 * Math.random() - 1.0);
+                mesh.rotation.x = Math.random() * Math.PI;
+                mesh.rotation.y = Math.random() * Math.PI;
+                mesh.rotation.z = Math.random() * Math.PI;
+                mesh.matrixAutoUpdate = false;
+                mesh.updateMatrix();
+                scene.add(mesh);
+                bulbLight.add(mesh);
+            }
+
+            renderer = new THREE.WebGLRenderer({
+                antialias: true
+            });
+            renderer.setPixelRatio(window.devicePixelRatio);
+            container.appendChild(renderer.domElement);
+            renderer.autoClear = false;
+
+            var renderModel = new THREE.RenderPass(scene, camera);
+            var effectBloom = new THREE.BloomPass(1.5);
+            var effectFilm = new THREE.FilmPass(1, 15, 1, false);
+
+            effectFilm.renderToScreen = true;
+
+            composer = new THREE.EffectComposer(renderer);
+
+            composer.addPass(renderModel);
+            composer.addPass(effectBloom);
+            composer.addPass(effectFilm);
+
+            onWindowResize();
+
+            window.addEventListener('resize', onWindowResize, false);
+
+        }
+
+        function onWindowResize(event) {
+
+            uniforms.resolution.value.x = window.innerWidth;
+            uniforms.resolution.value.y = window.innerHeight;
+
+            renderer.setSize(window.innerWidth, window.innerHeight);
+
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+
+            composer.reset();
+
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            render();
+        }
+
+        function render() {
+            var delta = 3 * clock.getDelta();
+            uniforms.time.value += 0.2 * delta;
+            sun.rotation.y += 0.0125 * delta;
+            bulbLight.rotation.y += 0.001;
+            renderer.clear();
+            composer.render(1.01);
+        }
+    </script>
+
+</body>
+
 </html>
